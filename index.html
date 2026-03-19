@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpendSmart — Student Expense Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="glow-orb glow-orb-1"></div>
+<div class="glow-orb glow-orb-2"></div>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        SpendSmart
+        <span>// Student Expense Analyzer</span>
+      </div>
+      <div class="header-stats">
+        <div class="stat-pill">
+          <strong id="header-total">₹0</strong>
+          This Month
+        </div>
+        <div class="stat-pill">
+          <strong id="header-count">0</strong>
+          Expenses
+        </div>
+        <div class="stat-pill">
+          <strong id="header-top-cat">—</strong>
+          Top Category
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('add')">+ Add</button>
+    <button class="tab-btn" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('patterns')">Patterns</button>
+    <button class="tab-btn" onclick="switchTab('waste')">Waste Report</button>
+    <button class="tab-btn" onclick="switchTab('savings')">Savings</button>
+  </div>
+
+  <!-- ADD EXPENSE TAB -->
+  <div class="tab-panel active" id="tab-add">
+    <div class="card">
+      <div class="card-title">Log an Expense</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="exp-desc" placeholder="What did you spend on?" />
+        </div>
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <input type="number" id="exp-amount" placeholder="0" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="exp-cat">
+            <option value="food">🍔 Food</option>
+            <option value="transport">🚌 Transport</option>
+            <option value="entertainment">🎮 Entertainment</option>
+            <option value="education">📚 Education</option>
+            <option value="health">💊 Health</option>
+            <option value="shopping">🛍️ Shopping</option>
+            <option value="rent">🏠 Rent</option>
+            <option value="other">📦 Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="exp-date" />
+        </div>
+        <button class="btn btn-primary" onclick="addExpense()">Add →</button>
+      </div>
+    </div>
+
+    <div class="section-gap">
+      <div class="filter-bar">
+        <label>Filter:</label>
+        <select id="filter-cat" onchange="renderList()" style="width:auto;">
+          <option value="all">All Categories</option>
+          <option value="food">Food</option>
+          <option value="transport">Transport</option>
+          <option value="entertainment">Entertainment</option>
+          <option value="education">Education</option>
+          <option value="health">Health</option>
+          <option value="shopping">Shopping</option>
+          <option value="rent">Rent</option>
+          <option value="other">Other</option>
+        </select>
+        <select id="filter-period" onchange="renderList()" style="width:auto;">
+          <option value="all">All Time</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+        </select>
+        <span id="filter-total" style="margin-left:auto; color:var(--muted); font-size:12px;"></span>
+      </div>
+      <div id="expense-list">
+        <div class="empty-state"><span class="icon">📭</span>No expenses yet. Add your first one above!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div class="tab-panel" id="tab-dashboard">
+    <div class="grid-auto" id="metrics-row"></div>
+
+    <div class="grid-2 section-gap">
+      <div class="card">
+        <div class="card-title">Spending by Category</div>
+        <div class="chart-container">
+          <canvas id="donutChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Category Breakdown</div>
+        <div id="cat-breakdown"></div>
+      </div>
+    </div>
+
+    <div class="card section-gap">
+      <div class="card-title">Category Insights</div>
+      <div id="cat-insights" class="grid-2" style="gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- PATTERNS TAB -->
+  <div class="tab-panel" id="tab-patterns">
+    <div class="card">
+      <div class="card-title">Daily Spending Pattern (Last 30 Days)</div>
+      <div class="chart-container-tall">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+
+    <div class="grid-2 section-gap">
+      <div class="card">
+        <div class="card-title">Weekly Spending (Last 8 Weeks)</div>
+        <div class="chart-container">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Day of Week Pattern</div>
+        <div class="chart-container">
+          <canvas id="dowChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section-gap">
+      <div class="card-title">Spending Heatmap by Category over Weeks</div>
+      <div class="chart-container">
+        <canvas id="radarChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- WASTE REPORT TAB -->
+  <div class="tab-panel" id="tab-waste">
+    <div class="card" style="border-color: rgba(252,92,125,0.3); background: rgba(252,92,125,0.04);">
+      <div style="display:flex; gap:16px; align-items:center; margin-bottom:20px;">
+        <div style="font-size:32px;">🔥</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif; font-size:18px; font-weight:800;">Where You Waste Money</div>
+          <div style="font-size:12px; color:var(--muted);">Smart analysis based on your spending habits</div>
+        </div>
+      </div>
+      <div id="waste-report"></div>
+    </div>
+  </div>
+
+  <!-- SAVINGS TAB -->
+  <div class="tab-panel" id="tab-savings">
+    <div class="grid-2">
+      <div class="metric-card success">
+        <div class="metric-label">Potential Monthly Savings</div>
+        <div class="metric-value" id="potential-savings">₹0</div>
+        <div class="metric-sub">if you follow all suggestions</div>
+      </div>
+      <div class="metric-card accent">
+        <div class="metric-label">Savings Score</div>
+        <div class="metric-value" id="savings-score">—</div>
+        <div class="metric-sub">based on your spending patterns</div>
+      </div>
+    </div>
+
+    <div id="saving-suggestions" class="section-gap"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js">
+
+</script>
+</body>
+</html>
